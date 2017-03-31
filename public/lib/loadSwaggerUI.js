@@ -15,6 +15,10 @@ $(function() {
 
   var lsKey = 'swagger_accessToken';
   $.getJSON('config.json', function(config) {
+    if (config.title) {
+      document.title = config.title;
+      $('#logo').text(config.title);
+    }
     log(config);
     loadSwaggerUi(config);
   });

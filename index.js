@@ -68,9 +68,13 @@ function routes(loopbackApplication, options) {
     if (!source) {
       source = req.originalUrl.replace(/\/config.json(\?.*)?$/, '');
     }
-    res.send({
+    var data = {
       url: urlJoin(source, '/' + options.resourcePath),
-    });
+    };
+    if (options.title) {
+      data.title = options.title;
+    }
+    res.send(data);
   });
 
   if (options.swaggerUI) {
