@@ -1,6 +1,6 @@
 {
   "name": "loopback-component-explorer",
-  "version": "4.2.0",
+  "version": "6.0.1",
   "description": "Browse and test your LoopBack app's APIs",
   "engines": {
     "node": ">=4"
@@ -29,18 +29,16 @@
     "chai": "^3.2.0",
     "eslint": "^2.8.0",
     "eslint-config-loopback": "^2.0.0",
-    "loopback": "^3.0.0",
-    "mocha": "^2.2.5",
-    "supertest": "^1.0.1"
+    "loopback": "^3.19.0",
+    "mocha": "^5.2.0",
+    "supertest": "^3.1.0"
   },
   "license": "MIT",
   "dependencies": {
-    "cors": "^2.7.1",
     "debug": "^2.2.0",
-    "depd": "^1.1.0",
-    "lodash": "^3.10.0",
-    "loopback-swagger": "^3.0.1",
-    "strong-globalize": "^2.6.2",
+    "lodash": "^4.17.5",
+    "loopback-swagger": "^5.0.0",
+    "strong-globalize": "^3.1.0",
     "swagger-ui": "^2.2.5"
   }
 }

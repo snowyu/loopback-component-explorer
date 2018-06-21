@@ -258,39 +258,6 @@ describe('explorer', function() {
     });
   });
 
-  describe('Cross-origin resource sharing', function() {
-    it('allows cross-origin requests by default', function(done) {
-      var app = loopback();
-      process.once('deprecation', function() { /* ignore */ });
-      configureRestApiAndExplorer(app, '/explorer');
-
-      request(app)
-        .options('/explorer/swagger.json')
-        .set('Origin', 'http://example.com/')
-        .expect('Access-Control-Allow-Origin', /^http:\/\/example.com\/|\*/)
-        .expect('Access-Control-Allow-Methods', /\bGET\b/)
-        .end(done);
-    });
-
-    it('can be disabled by configuration', function(done) {
-      var app = loopback();
-      app.set('remoting', { cors: false });
-      configureRestApiAndExplorer(app, '/explorer');
-
-      request(app)
-        .options('/explorer/swagger.json')
-        .end(function(err, res) {
-          if (err) return done(err);
-
-          var allowOrigin = res.get('Access-Control-Allow-Origin');
-          expect(allowOrigin, 'Access-Control-Allow-Origin')
-            .to.equal(undefined);
-
-          done();
-        });
-    });
-  });
-
   it('updates swagger object when a new model is added', function(done) {
     var app = loopback();
     app.set('remoting', { cors: false });
@@ -325,6 +292,41 @@ describe('explorer', function() {
       });
   });
 
+  it('updates swagger object when a model is removed', function(done) {
+    var app = loopback();
+    app.set('remoting', { cors: false });
+    configureRestApiAndExplorer(app, '/explorer');
+
+    var Model = loopback.PersistedModel.extend('Customer');
+    Model.attachTo(loopback.memory());
+    app.model(Model);
+
+    // Ensure the swagger object was built
+    request(app)
+      .get('/explorer/swagger.json')
+      .expect(200)
+      .end(function(err) {
+        if (err) return done(err);
+
+        app.deleteModelByName('Customer');
+
+        // Request swagger.json again
+        request(app)
+          .get('/explorer/swagger.json')
+          .expect(200)
+          .end(function(err, res) {
+            if (err) return done(err);
+
+            var modelNames = Object.keys(res.body.definitions);
+            expect(modelNames).to.not.contain('Customer');
+            var paths = Object.keys(res.body.paths);
+            expect(paths).to.not.contain('/Customers');
+
+            done();
+          });
+      });
+  });
+
   it('updates swagger object when a remote method is disabled', function(done) {
     var app = loopback();
     app.set('remoting', { cors: false });
@@ -353,6 +355,41 @@ describe('explorer', function() {
 
             var paths = Object.keys(res.body.paths);
             expect(paths).to.not.contain('/products/findOne');
+
+            done();
+          });
+      });
+  });
+
+  it('updates swagger object when a remote method is added', function(done) {
+    var app = loopback();
+    app.set('remoting', { cors: false });
+    configureRestApiAndExplorer(app, '/explorer');
+
+    // Ensure the swagger object was built
+    request(app)
+      .get('/explorer/swagger.json')
+      .expect(200)
+      .end(function(err, res) {
+        if (err) return done(err);
+
+        // Check the method that will be disabled
+        var paths = Object.keys(res.body.paths);
+        expect(paths).to.contain('/products/findOne');
+
+        var Product = app.models.Product;
+        Product.findOne2 = function(cb) { cb(null, 1); };
+        Product.remoteMethod('findOne2', {});
+
+        // Request swagger.json again
+        request(app)
+          .get('/explorer/swagger.json')
+          .expect(200)
+          .end(function(err, res) {
+            if (err) return done(err);
+
+            var paths = Object.keys(res.body.paths);
+            expect(paths).to.contain('/products/findOne2');
 
             done();
           });
